@@ -6,3 +6,4 @@
 
 int ask_encoder();
 void XOR_encoder_decoder(uint8_t *input, uint64_t size);
+void one_time_pad_encoder(uint8_t *input, uint64_t size);
