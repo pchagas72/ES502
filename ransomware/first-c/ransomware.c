@@ -19,8 +19,8 @@ void walk(const char *basePath);
 int readFile(const char *name);
 int check(const char *name);
 void handleFile(char *fileName);
-void encryptFile(uint8_t *input, uint64_t size);
 void writeFile(const char *name, uint8_t *content, uint64_t size);
+void encryptFile(uint8_t *input, uint64_t size);
 void decryptFiles();
 
 void walk(const char *basePath) {
