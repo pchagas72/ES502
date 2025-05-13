@@ -21,6 +21,7 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 ### TODO C:
 - Adicionar plarygroud com diferentes criptografias [OK]
 - Adicionar mais métodos de criptografias
--   Cifra de César [OK]
--   RSA
+- Cifra de César [OK]
+- RSA
 - Adicionar sistema de flags para o playground [OK]
+- Melhorar sistema de flags
