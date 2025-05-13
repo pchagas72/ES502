@@ -5,6 +5,7 @@ int ask_encoder(){
     printf("Choose a encoder:\n");
     printf("(1) XOR\n");
     printf("(2) Caesar\n");
+    printf("(3) AES\n");
     printf(">>> ");
     scanf("%d", &encoder);
     if (encoder > NUM_ENCODERS || encoder < 1){
