@@ -12,9 +12,9 @@ struct fileStruct {
 };
 typedef struct fileStruct FileStruct;
 
-void walk(const char *basePath, FileStruct *file, int encoder_ID);
+void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[]);
 int loadFile(const char *name, FileStruct *file);
 void writeFile(const char *name, uint8_t *content, uint64_t size);
-void handleFile(char *fileName, FileStruct *file, int encoder_ID);
+void handleFile(char *fileName, FileStruct *file, int encoder_ID, char *args[]);
 int checkFile(const char *name);
 

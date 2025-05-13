@@ -1,6 +1,6 @@
 #include "./redundant.h"
 
-void walk(const char *basePath, FileStruct *file, int encoder_ID){
+void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[]){
     struct dirent *entry;
     DIR *dir = opendir(basePath);
 
@@ -20,10 +20,10 @@ void walk(const char *basePath, FileStruct *file, int encoder_ID){
         struct stat statbuf;
         if (stat(path, &statbuf) == 0) {
             if (S_ISDIR(statbuf.st_mode)) {
-                walk(path, file, encoder_ID); // Recursive call
+                walk(path, file, encoder_ID, args); // Recursive call
             } else {
                 printf("File: %s\n", path);
-		        handleFile(path, file, encoder_ID);
+		        handleFile(path, file, encoder_ID, args);
             }
         }
     }
@@ -66,7 +66,7 @@ void writeFile(const char *name, uint8_t *content, uint64_t size) {
 	fwrite(content, 1, size, fp);
 }
 
-void handleFile(char *filename, FileStruct *file, int encoder_ID){
+void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]){
 	if (checkFile(filename) == 1){
 		return;	
 	} 
@@ -83,6 +83,15 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID){
         case 1:
 	        XOR_encoder_decoder(file->buffer, file->size); 
             printf("Encoding using XOR\n");
+            break;
+        case 2:
+            caesar_encoder(file->buffer, file->size, atoi(args[3]));
+            printf("Encoding using Caesar\n");
+            break;
+        case 3:
+            caesar_decoder(file->buffer, file->size, atoi(args[3]));
+            printf("Decoding using Caesar\n");
+            break;
     }
 	writeFile(filename, file->buffer, file->size);
 
