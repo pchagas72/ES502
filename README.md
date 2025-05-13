@@ -23,5 +23,6 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Adicionar mais métodos de criptografias
 - Cifra de César [OK]
 - RSA
+- Add key input to XOR
 - Adicionar sistema de flags para o playground [OK]
 - Melhorar sistema de flags
