@@ -12,17 +12,16 @@ O esqueleto de um ransomware, utiliza Fernet para encriptar todos os arquivos de
 
 A versão em C está em estado de testes com diferentes métodos de criptografia.
 
-### TODO python:
+### TODO fist:
 - Utilizar key como senha. [OK]
 - Usar uma key conhecida pelo operador e deletar ela logo após encriptar. [OK]
-- Adicionar UI. 
 - Refazer em C ou Go para gerar binário coerente. [OK]
 
-### TODO C:
+### TODO first-c:
 - Adicionar plarygroud com diferentes criptografias [OK]
-- Adicionar mais métodos de criptografias
-- Cifra de César [OK]
-- RSA
-- Add key input to XOR
+- Adicionar Cifra de César [OK]
 - Adicionar sistema de flags para o playground [OK]
+- Adicionar AES [OK]
+- Criptografar chave AES com RSA
+- Add key input to XOR
 - Melhorar sistema de flags
