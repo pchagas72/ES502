@@ -23,5 +23,7 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Adicionar sistema de flags para o playground [OK]
 - Adicionar AES [OK]
 - Criptografar chave AES com RSA
-- Add key input to XOR
+- Criar e esconder key do AES
+- Adicionar input de key para o XOR
 - Melhorar sistema de flags
+- Adicionar --help
