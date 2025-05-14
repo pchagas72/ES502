@@ -50,11 +50,3 @@ int caesar_ask_key(){
     scanf("%d", &key);
     return key;
 }
-
-void RSA_encoder(){
-    
-}
-
-void RSA_decoder(){
-
-}

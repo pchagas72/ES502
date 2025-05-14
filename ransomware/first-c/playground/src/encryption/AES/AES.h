@@ -5,6 +5,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <unistd.h>
 
 #define AES_KEY_SIZE    32
 #define AES_IV_SIZE     16
@@ -29,4 +30,6 @@ int AES_loadFile(const char *filename, unsigned char **buffer,
 
 void AES_writeFile(const char *filename, unsigned char *content,
                    uint64_t size);
+
+void AES_generateKey(unsigned char *key);
 

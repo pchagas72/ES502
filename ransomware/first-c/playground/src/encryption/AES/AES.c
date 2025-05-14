@@ -83,3 +83,22 @@ void AES_writeFile(const char *filename, unsigned char *content, uint64_t size) 
     fclose(fp);
 }
 
+void AES_generateKey(unsigned char *key){
+    if (access("./keys/AES.key", F_OK) != 0){
+        if (RAND_bytes(key,32) != 1){
+            printf("Could not generate random key\n");
+            free(key);
+        } else{
+            printf("Generated key\n");
+            FILE *keyFile = fopen("./keys/AES.key", "wb");
+            fputs(key, keyFile);
+            fclose(keyFile);
+            printf("Written keyfile\n");
+        }
+    } else{
+        printf("Key exists, reading key\n");
+        FILE *keyFile = fopen("./keys/AES.key", "rb");
+        fread(key, sizeof(unsigned char *), 32, keyFile);
+    }
+}
+

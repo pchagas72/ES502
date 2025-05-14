@@ -22,8 +22,9 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Adicionar Cifra de César [OK]
 - Adicionar sistema de flags para o playground [OK]
 - Adicionar AES [OK]
-- Criptografar chave AES com RSA
-- Criar e esconder key do AES
+- Criar e esconder key do AES [OK]
+- Criptografar chave AES com RSA [OK]
+- Adicionar --help [OK]
 - Adicionar input de key para o XOR
 - Melhorar sistema de flags
-- Adicionar --help
+- Melhorar os outputs ou remover eles
