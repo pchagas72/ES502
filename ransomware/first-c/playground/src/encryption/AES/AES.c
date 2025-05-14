@@ -12,14 +12,14 @@ int AES_encrypt(unsigned char *input, uint64_t size, unsigned char *key, unsigne
     // Create and initialize the context
     if (!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
 
-    // Initialize encryption operation with AES-256-CBC
+    // Initialize encryption operation, AES 256
     if (1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) handleErrors();
 
-    // Provide the message to be encrypted and obtain the encrypted output
+    // Starts encryption
     if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, input, (int)size)) handleErrors();
     ciphertext_len = len;
 
-    // Finalize the encryption (handles padding)
+    // Finalize the encryption, adds padding
     if (1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len)) handleErrors();
     ciphertext_len += len;
 
@@ -29,7 +29,6 @@ int AES_encrypt(unsigned char *input, uint64_t size, unsigned char *key, unsigne
     return ciphertext_len;
 }
 
-// Function to load a file into memory
 int AES_loadFile(const char *filename, unsigned char **buffer, uint64_t *size) {
     FILE *fp = fopen(filename, "rb");
     if (fp == NULL) {
@@ -58,22 +57,18 @@ int AES_loadFile(const char *filename, unsigned char **buffer, uint64_t *size) {
 int AES_decrypt(unsigned char *input, uint64_t size, unsigned char *key, unsigned char *iv, unsigned char *plaintext) {
     EVP_CIPHER_CTX *ctx;
     int len, plaintext_len;
+    // Does almost the exact same thing as encrypt, but in reverse
 
-    // Create and initialize the context
     if (!(ctx = EVP_CIPHER_CTX_new())) handleErrors();
 
-    // Initialize decryption operation with AES-256-CBC
     if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv)) handleErrors();
 
-    // Provide the message to be decrypted and obtain the decrypted output
     if (1 != EVP_DecryptUpdate(ctx, plaintext, &len, input, (int)size)) handleErrors();
     plaintext_len = len;
 
-    // Finalize the decryption (handles padding)
     if (1 != EVP_DecryptFinal_ex(ctx, plaintext + len, &len)) handleErrors();
     plaintext_len += len;
 
-    // Clean up
     EVP_CIPHER_CTX_free(ctx);
 
     return plaintext_len;
