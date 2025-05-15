@@ -28,3 +28,11 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Adicionar --help [OK]
 - Adicionar input de key para o XOR [OK]
 - Melhorar os outputs ou remover eles
+
+### TODO ransom:
+Agora que o playground ficou pronto, fazer um arquivo principal com as seguintes caraterísticas:
+
+- Arquivo único, menor possível
+- Esconder o malware em um arquivo comum
+- Utilizar novas chaves
+- Criptografar com AES e RSA
