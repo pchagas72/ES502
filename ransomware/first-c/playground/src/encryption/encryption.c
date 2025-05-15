@@ -15,9 +15,8 @@ int ask_encoder(){
     return encoder;
 }
 
-void XOR_encoder_decoder(uint8_t *input, uint64_t size){
-	uint8_t key[] = {'S', 'I', 'D'}; // key
-	
+void XOR_encoder_decoder(uint8_t *input, uint64_t size, unsigned char *key){
+    key = (uint8_t*)key;
 	for(int i = 0; i < size; i++) {
 		input[i] = input[i] ^ key[i % (sizeof(key)/sizeof(uint8_t))];
 	}

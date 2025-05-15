@@ -7,7 +7,7 @@
 #define NUM_ENCODERS 5
 
 int ask_encoder();
-void XOR_encoder_decoder(uint8_t *input, uint64_t size);
+void XOR_encoder_decoder(uint8_t *input, uint64_t size, unsigned char *key);
 void caesar_encoder(uint8_t *input, uint64_t size, int key);
 void caesar_decoder(uint8_t *input, uint64_t size, int key);
 int caesar_ask_key();

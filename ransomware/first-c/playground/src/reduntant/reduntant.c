@@ -78,7 +78,7 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], 
             if (loadFile(filename, file) == 1) {
                 return;
             }
-            XOR_encoder_decoder(file->buffer, file->size);
+            XOR_encoder_decoder(file->buffer, file->size, args[2]);
             printf("Encoding using XOR\n");
             writeFile(filename, file->buffer, file->size);
             free(file->buffer);
