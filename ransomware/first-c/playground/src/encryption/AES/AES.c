@@ -39,7 +39,7 @@ int AES_loadFile(const char *filename, unsigned char **buffer, uint64_t *size) {
     fseek(fp, 0, SEEK_END);
     *size = ftell(fp);
     rewind(fp);
-	printf("File: %s size loaded\n", filename);
+	//printf("File: %s size loaded\n", filename);
 
     *buffer = (unsigned char *)malloc(*size);
     if (*buffer == NULL) {
@@ -48,7 +48,7 @@ int AES_loadFile(const char *filename, unsigned char **buffer, uint64_t *size) {
     }
 
     fread(*buffer, 1, *size, fp);
-	printf("File: %s buffer loaded\n", filename);
+    //printf("File: %s buffer loaded\n", filename);
     fclose(fp);
 
     return 0;

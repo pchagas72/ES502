@@ -22,7 +22,7 @@ void walk(const char *basePath, FileStruct *file, int encoder_ID, char *args[], 
             if (S_ISDIR(statbuf.st_mode)) {
                 walk(path, file, encoder_ID, args, SIG); // Recursive call
             } else {
-                printf("File: %s\n", path);
+                printf("File: %s \n", path);
 		        handleFile(path, file, encoder_ID, args, SIG);
             }
         }
@@ -43,14 +43,14 @@ int loadFile(const char *name, FileStruct *file) {
 	fseek(fp, 0, SEEK_END);
 	file->size = ftell(fp);
 	rewind(fp);
-	printf("File: %s size loaded\n", name);
+	//printf("File: %s size loaded\n", name);
 
 	// initalize buffer with file size
 	file->buffer = (uint8_t *)malloc((file->size+1)*sizeof(uint8_t));
 
 	// read all characters into buffer
 	fread(file->buffer, 1, file->size, fp);
-	printf("File: %s buffer loaded\n", name);
+	//printf("File: %s buffer loaded\n", name);
 
 	// close file
 	fclose(fp);
@@ -79,7 +79,7 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], 
                 return;
             }
             XOR_encoder_decoder(file->buffer, file->size, args[2]);
-            printf("Encoding using XOR\n");
+            printf("-- Encoding using XOR\n");
             writeFile(filename, file->buffer, file->size);
             free(file->buffer);
             break;
@@ -90,7 +90,7 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], 
                 return;
             }
             caesar_encoder(file->buffer, file->size, atoi(args[3]));
-            printf("Encoding using Caesar\n");
+            printf("-- Encoding using Caesar\n");
             writeFile(filename, file->buffer, file->size);
             free(file->buffer);
             break;
@@ -101,13 +101,13 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], 
                 return;
             }
             caesar_decoder(file->buffer, file->size, atoi(args[3]));
-            printf("Decoding using Caesar\n");
+            printf("-- Decoding using Caesar\n");
             writeFile(filename, file->buffer, file->size);
             free(file->buffer);
             break;
         }
         case 3:{
-            printf("Encoding using RSA\n");
+            printf("-- Encoding using AES\n");
             if (*SIG != 300){
                 *SIG = 300;
             }
@@ -172,7 +172,6 @@ void handleFile(char *filename, FileStruct *file, int encoder_ID, char *args[], 
     }
 
 }
-
 
 int checkFile(const char *name) {
     if (strcasestr(name, ".doc") != NULL) return 0;
