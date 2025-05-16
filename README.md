@@ -17,8 +17,8 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Usar uma key conhecida pelo operador e deletar ela logo após encriptar. [OK]
 - Refazer em C ou Go para gerar binário coerente. [OK]
 
-### TODO first-c:
-- Adicionar plarygroud com diferentes criptografias [OK]
+### TODO playground:
+- Adicionar playgroud com diferentes criptografias [OK]
 - Adicionar Cifra de César [OK]
 - Adicionar sistema de flags para o playground [OK]
 - Adicionar AES [OK]
@@ -27,12 +27,11 @@ A versão em C está em estado de testes com diferentes métodos de criptografia
 - Melhorar sistema de flags [OK]
 - Adicionar --help [OK]
 - Adicionar input de key para o XOR [OK]
-- Melhorar os outputs ou remover eles
 
-### TODO ransom:
+### TODO walker-c:
 Agora que o playground ficou pronto, fazer um arquivo principal com as seguintes caraterísticas:
 
-- Arquivo único, menor possível
+- Utilizar novas chaves [OK]
+- Criptografar com AES e RSA, escondendo RSA [OK]
+- Adicionar --path
 - Esconder o malware em um arquivo comum
-- Utilizar novas chaves
-- Criptografar com AES e RSA
