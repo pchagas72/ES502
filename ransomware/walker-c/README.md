@@ -1,40 +1,132 @@
-# Walker.c
+
+# Documentação Técnica – Walker.c
 
 ## Propósito
 
-Este foi um ransomware criado para a cadeira ES502 de segurança da informação, com o professor Sidney Lopes do 
-Departamento de Eletrônica e Sistemas, na Universidade Federal de Pernambuco. E tem como propósito o estudo de 
-métodos criptográficos e como eles podem ser aplicados em maliciosos como Ransomwares.
+O *Walker.c* é um ransomware desenvolvido como parte da disciplina **ES502 - Segurança da Informação**, ministrada pelo professor **Sidney Lopes**, do Departamento de Eletrônica e Sistemas da **Universidade Federal de Pernambuco (UFPE)**. Seu objetivo é proporcionar uma experiência prática no uso de técnicas criptográficas, demonstrando como elas podem ser aplicadas tanto para segurança quanto para fins ofensivos, como no funcionamento de ransomwares.
+
+---
 
 ## Utilização
 
-Ao compilar o binário, ele deve ser executado com flags, isto é "--encode" e "--decode".
+Após a compilação, o binário pode ser executado com os seguintes parâmetros:
 
-Ao utilizar "ransom --encode" o programa irá codificar todos os arquivos DO CAMINHO ONDE FOI EXECUTADO, na explicação do código 
-pode-se encontrar a razão por isto. 
+```bash
+./walker --encode     # Criptografa arquivos do diretório atual
+./walker --decode     # Descriptografa os arquivos
+./walker --help       # Exibe a ajuda
+```
 
-Já utilizando "ransom --decode" o programa irá pedir uma chave e decodificar todos os arquivos do caminho.
+As versões curtas também são suportadas:
 
-## Explicação do código
+```bash
+./walker -e
+./walker -d
+./walker -h
+```
 
-Por agora, vamos por partes seguindo o caminho do repositório:
+> ⚠️ O programa opera **apenas no diretório atual**, ou seja, todos os arquivos presentes no diretório de execução serão afetados. Isso foi uma decisão intencional e está justificada no código.
 
-### Main.c
+---
 
-No "main" o código simplesmente checa a flag que o usuário utilizou e retorna a função adequada para ser executada.
+## Estrutura de Diretórios
 
-### FileHandler
+A organização dos arquivos do projeto segue um padrão modular, separando as responsabilidades por pasta. Abaixo está um resumo da estrutura, baseada em `find .`:
 
-Neste arquivo, funções essenciais são implementadas, como as "walk" e "infect".
+```
+.
+├── Makefile                   # Script de compilação
+├── bin/
+│   └── ransom                 # Binário compilado
+├── system/
+│   └── file.txt               # Arquivo de exemplo para teste
+├── src/
+│   ├── main.c                 # Ponto de entrada do programa
+│   ├── ransom.key             # Chave RSA privada (exemplo)
+│   ├── keys/
+│   │   ├── AES.key            # Chave AES temporária
+│   │   └── public_key.key     # Chave pública RSA
+│   ├── FileHandler/
+│   │   ├── FileHandler.c      # Manipulação de arquivos
+│   │   └── FileHandler.h
+│   └── encryption/
+│       ├── encryption.h       # Header central de criptografia
+│       ├── AES/
+│       │   ├── AES.c          # Implementação de AES
+│       │   └── AES.h
+│       └── RSA/
+│           ├── RSA.c          # Implementação de RSA
+│           └── RSA.h
+```
 
-### Função "Walk"
+Essa estrutura permite isolar as funções relacionadas à criptografia (`AES`, `RSA`) e ao controle de arquivos (`FileHandler`) de forma organizada. O diretório `bin/` contém o executável final, e `system/` pode ser usado como ambiente de teste.
 
-Esta função lê todos os arquivos em árvore de definido diretório, e para cada um deles, dependendo da opção do usuário (encode ou decode), infecta ou limpa cada um dos arquivos.
+---
 
-### Função "Infect"
+## Estrutura do Código
 
-A função infect utiliza criptografia AES para infectar os arquivos que a função Walk encontrar, ao final de todos os arquivos, codifica-se a chave AES utilizada com RSA, e a chave privada apenas o atacante tem acesso.
+### `main.c`
 
-### Função "Clean"
+Este arquivo é o ponto de entrada do programa. Ele interpreta os argumentos de linha de comando utilizando `getopt_long` e direciona o fluxo para as funções apropriadas.
 
-Esta função faz o contrário da "Infect", uma infecta, a outra limpa. Esta função pede uma chave privada de RSA e limpa o computador infectado.
+- `--encode` ou `-e`: inicia a criptografia dos arquivos.
+- `--decode` ou `-d`: solicita uma chave privada e inicia a descriptografia.
+- `--help` ou `-h`: exibe uma mensagem de uso.
+
+Dependendo da flag escolhida, o programa chama a função `walk`, que percorre os arquivos e aplica a operação desejada. A criptografia ou descriptografia das chaves AES é feita após o processo de arquivo, via `RSA_encrypt` ou `RSA_decrypt`.
+
+---
+
+### `FileHandler.c`
+
+Este módulo agrupa as funções responsáveis pela manipulação dos arquivos no sistema de diretórios.
+
+#### Função `walk`
+
+Percorre recursivamente todos os arquivos do diretório onde o programa foi executado. Para cada arquivo encontrado, chama a função adequada: `infect` (criptografar) ou `clean` (descriptografar), dependendo da operação selecionada.
+
+#### Função `infect`
+
+Criptografa um arquivo usando AES e, ao final, prepara a chave AES para ser criptografada com RSA. Cada arquivo é sobrescrito com sua versão criptografada.
+
+#### Função `clean`
+
+Faz o processo inverso da `infect`. Recebe a chave privada RSA, descriptografa a chave AES previamente salva e utiliza-a para restaurar os arquivos criptografados ao seu estado original.
+
+---
+
+### `AES.c`
+
+Este arquivo contém as rotinas de criptografia e descriptografia com **AES (Advanced Encryption Standard)**.
+
+#### Função `encryptFile`
+
+Criptografa o conteúdo de um arquivo usando AES no modo CBC. Um IV (vetor de inicialização) aleatório é utilizado para aumentar a segurança. O resultado substitui o conteúdo original do arquivo.
+
+#### Função `decryptFile`
+
+Descriptografa o conteúdo de um arquivo criptografado com AES, restaurando seu conteúdo original. A operação depende da chave AES correta e do IV usado na criptografia.
+
+Essas funções são invocadas pelas funções `infect` e `clean` no `FileHandler.c`.
+
+---
+
+### `RSA.c`
+
+Implementa a criptografia assimétrica **RSA**, usada exclusivamente para proteger a chave AES.
+
+#### Função `RSA_encrypt`
+
+Criptografa a chave AES com uma chave pública RSA. Essa chave criptografada pode ser armazenada com segurança ou transmitida ao atacante.
+
+#### Função `RSA_decrypt`
+
+Recebe uma chave privada RSA e a utiliza para descriptografar a chave AES. Essa operação é crítica para permitir que os arquivos criptografados possam ser recuperados no modo `--decode`.
+
+---
+
+## Considerações Finais
+
+Este projeto foi construído com propósitos exclusivamente educacionais, para demonstrar o funcionamento interno de ransomwares e a aplicação de técnicas criptográficas modernas. Qualquer uso indevido deste código pode configurar crime, conforme previsto na legislação brasileira. O autor não se responsabiliza por usos fora do contexto acadêmico.
+
+---

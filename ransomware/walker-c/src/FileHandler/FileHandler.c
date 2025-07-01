@@ -91,7 +91,6 @@ void clean(char *filePath){
 
     unsigned char *input_data;
     uint64_t input_size;
-    // Load the input file into memory
     if (AES_loadFile(filePath, &input_data, &input_size) != 0) {
         fprintf(stderr, "Error loading file\n");
         return;
