@@ -1,20 +1,20 @@
-# Walker.c: Documentação Técnica Científica
+# Walker.c: Technical Scientific Documentation
 
-## 1. Introdução
+## 1. Introduction
 
 O presente documento descreve a estrutura, funcionamento e aspectos técnicos do software **Walker.c**, um protótipo de ransomware desenvolvido para fins exclusivamente educacionais no âmbito da disciplina **ES502 - Segurança da Informação** do curso de Engenharia Eletrônica da **Universidade Federal de Pernambuco (UFPE)**.
 
 O projeto visa a exploração aplicada de técnicas criptográficas modernas, incluindo criptografia simétrica (**AES**) e assimétrica (**RSA**), bem como conceitos de segurança ofensiva e engenharia reversa. 
 
-## 2. Objetivo Funcional
+## 2. Functional Objective
 
-O binário gerado pelo projeto realiza operações de criptografia e descriptografia sobre arquivos do diretório de execução. As operações são:
+O binário gerado pelo projeto realiza encryption and decryption operations on files do diretório de execução. As operações são:
 
-- `--encode` ou `-e`: criptografa os arquivos do diretório atual.
-- `--decode` ou `-d`: solicita uma chave RSA privada e reverte os arquivos ao estado original.
-- `--help` ou `-h`: exibe a ajuda.
+- `--encode` ou `-e`: encrypts the files do diretório atual.
+- `--decode` ou `-d`: requests a private RSA key e reverte os arquivos ao estado original.
+- `--help` ou `-h`: displays help.
 
-## 3. Seleção de Arquivos
+## 3. File Selection
 
 A seleção dos arquivos é realizada pela função `walk`, definida em `FileHandler.c`. Apenas arquivos regulares são processados, utilizando a função `stat` e o macro `S_ISREG`. Diretórios, arquivos ocultos (prefixados por ".") e outros tipos de entrada são descartados:
 
@@ -27,31 +27,31 @@ if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
 }
 ```
 
-## 4. Arquitetura Modular
+## 4. Modular Architecture
 
 A arquitetura do sistema é modular, conforme a seguinte organização:
 
 ```
 src/
-├── main.c                 # Ponto de entrada do programa
-├── FileHandler/           # Manipulação de arquivos
+├── main.c                 # Program Entry Point
+├── FileHandler/           # File Handling
 │   ├── FileHandler.c
 │   └── FileHandler.h
 ├── encryption/
-│   ├── encryption.h       # Header unificado
+│   ├── encryption.h       # Unified Header
 │   ├── AES/
 │   │   ├── AES.c
 │   │   └── AES.h
 │   └── RSA/
 │       ├── RSA.c
 │       └── RSA.h
-├── keys/                  # Armazenamento de chaves
+├── keys/                  # Key Storage
 │   ├── AES.key
 │   └── public_key.key
-└── ransom.key             # Chave privada RSA
+└── ransom.key             # Private RSA Key
 ```
 
-## 5. Comportamento do Programa
+## 5. Program Behavior
 
 ### 5.1. `main.c`
 
@@ -87,9 +87,9 @@ switch (opt) {
 
 ### 5.2. `FileHandler.c`
 
-#### Função `walk`
+#### Function `walk`
 
-Percorre recursivamente os arquivos do diretório de execução:
+Recursively traverses the files in the execution directory:
 
 ```c
 void walk(int encrypt, FILE *rsa) {
@@ -217,14 +217,14 @@ void RSA_decrypt(FILE *rsaFile) {
 }
 ```
 
-## 6. Considerações de Segurança
+## 6. Security Considerations
 
-Todas as operações foram implementadas com foco educacional. O armazenamento da chave AES em disco e a sobrescrita dos arquivos originais representam riscos reais de perda de dados. O uso deste código para fins não autorizados pode configurar crime, conforme legislação vigente.
+All operations were implemented with an educational focus. O armazenamento da chave AES em disco e a sobrescrita dos arquivos originais representam riscos reais de perda de dados. The use of this code for unauthorized purposes pode configurar crime, conforme legislação vigente.
 
-## 7. Conclusão
+## 7. Conclusion
 
-Walker.c representa um estudo prático e científico da aplicação de criptografia em ataques ransomware. A modularidade do projeto, combinada com técnicas reais de criptografia, permite a compreensão aprofundada do funcionamento desse tipo de software malicioso. 
+Walker.c represents a practical and scientific study da aplicação de criptografia em ataques ransomware. A modularidade do projeto, combinada com técnicas reais de criptografia, permite a compreensão aprofundada do funcionamento desse tipo de software malicioso. 
 
 ---
 
-> **Aviso Legal:** Este projeto é estritamente educacional. Não utilize este software em sistemas reais ou com dados sensíveis.
+> **Legal Notice:** Este projeto é estritamente educacional. Do not use this software in real systems or with sensitive data.
