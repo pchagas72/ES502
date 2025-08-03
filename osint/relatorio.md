@@ -299,3 +299,14 @@ Aqui, já encontramos de cara o que queremos, um bar cujo nome tenha 10 letras:
 E por último, a única cor com 8 letras é vermelho, finalizando o desafio, é vermelho.
 
 Desta maneira aplicamos o processo de OSINT para a obtenção de informações via canais abertos com um target fixo e objetivos definidos!
+
+Vale ressaltar que todo este processo foi feito sem ferramentas, utilizando ferramentas como a epieos, demonstrada pelo professor, teríamos informações como o maps logo de cara.
+
+![epieos](./sources/epieos.png)
+
+Por isso, como um extra para as aulas maravilhosas do professor, vale pesquisar por mais métodos de osint, até mesmo específicos para plataformas como o antigo OsintGram.
+
+Existem diversas ferramentas e um ótimo lugar para descobrir elas é o anteriormente citado "osint-framework"
+
+![osint_framework](./sources/osintFramwork.png)
+
